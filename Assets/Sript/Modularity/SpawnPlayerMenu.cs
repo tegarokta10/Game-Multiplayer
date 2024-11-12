@@ -5,13 +5,14 @@ using TMPro;
 
 public class SpawnPlayerMenu : MonoBehaviour
 {
-    public Button hostButton;
-    public Button clientButton;
-    public Button readyButton;
-    public TextMeshProUGUI statusText;
+    [SerializeField] private Button hostButton;
+    [SerializeField] private Button clientButton;
+    [SerializeField] private Button readyButton;
+    [SerializeField] private TextMeshProUGUI statusText;
+    [SerializeField] private GameObject hostPaddlePrefab; // Assign your host paddle prefab here
+    [SerializeField] private GameObject clientPaddlePrefab; // Assign your client paddle prefab here
 
     private bool isReady = false;
-    private const int maxPlayers = 2; // Batas maksimal pemain
 
     private void Start()
     {
@@ -20,57 +21,45 @@ public class SpawnPlayerMenu : MonoBehaviour
         readyButton.onClick.AddListener(OnReadyButtonPressed);
         readyButton.interactable = false;
 
-        // Callback untuk memeriksa jika ada pemain yang terhubung
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
 
-    private void OnHostButtonPressed()
+    public void OnHostButtonPressed()
     {
-        NetworkManager.Singleton.StartHost();
-        statusText.text = "Host mode active. Waiting for players...";
-        readyButton.interactable = true;
-    }
-
-    private void OnClientButtonPressed()
-    {
-        if (NetworkManager.Singleton.ConnectedClients.Count < maxPlayers)
+        if (!NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
         {
-            NetworkManager.Singleton.StartClient();
-            statusText.text = "Connected as Client. Waiting for Host...";
+            NetworkManager.Singleton.StartHost();
+            statusText.text = "Host mode active. Waiting for players...";
             readyButton.interactable = true;
         }
         else
         {
-            statusText.text = "Max players reached. Cannot join as Client.";
+            Debug.LogWarning("Host or Client is already running.");
+            statusText.text = "Host or Client already running.";
         }
     }
 
-    private void OnReadyButtonPressed()
+    public void OnClientButtonPressed()
+    {
+        NetworkManager.Singleton.StartClient();
+        statusText.text = "Connected as Client. Waiting for Host...";
+        readyButton.interactable = true;
+    }
+
+    public void OnReadyButtonPressed()
     {
         isReady = true;
-
-        // Tambahkan konfigurasi pemain ke PlayerConfigurationManager
         PlayerConfigurationManager.Instance.AddPlayerConfiguration(new PlayerConfiguration { IsReady = isReady });
-
-        // Update UI status
         statusText.text = "Ready! Waiting for other player...";
         readyButton.interactable = false;
-
-        // Cek apakah semua pemain siap, lalu mulai permainan jika iya
         CheckAllPlayersReady();
     }
 
     private void OnClientConnected(ulong clientId)
     {
-        // Periksa jika sudah mencapai jumlah maksimal pemain
-        if (NetworkManager.Singleton.ConnectedClients.Count > maxPlayers)
+        if (NetworkManager.Singleton.ConnectedClients.Count > 2)
         {
-            Debug.Log("Max players reached. Disconnecting extra players.");
             NetworkManager.Singleton.DisconnectClient(clientId);
-        }
-        else
-        {
-            Debug.Log($"Player {clientId} connected");
         }
     }
 
@@ -78,11 +67,31 @@ public class SpawnPlayerMenu : MonoBehaviour
     {
         if (PlayerConfigurationManager.Instance.AllPlayersReady)
         {
-            PongGameManagerModul gameManager = FindObjectOfType<PongGameManagerModul>();
-            if (gameManager != null)
+            SpawnPaddles();
+            FindObjectOfType<PongGameManagerModul>().StartGame();
+        }
+    }
+
+    private void SpawnPaddles()
+    {
+        if (NetworkManager.Singleton.IsServer)
+        {
+            foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
             {
-                gameManager.StartGame();
+                SpawnPaddle(client.ClientId == NetworkManager.Singleton.LocalClientId, client.ClientId);
             }
+        }
+    }
+
+    private void SpawnPaddle(bool isHost, ulong clientId)
+    {
+        GameObject paddlePrefab = isHost ? hostPaddlePrefab : clientPaddlePrefab;
+        GameObject paddleInstance = Instantiate(paddlePrefab);
+
+        NetworkObject networkObject = paddleInstance.GetComponent<NetworkObject>();
+        if (networkObject != null)
+        {
+            networkObject.SpawnWithOwnership(clientId);
         }
     }
 }
