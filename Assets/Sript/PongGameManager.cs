@@ -3,27 +3,44 @@ using Unity.Netcode;
 
 public class PongGameManager : NetworkBehaviour
 {
-    private int player1Points = 0;
-    private int player2Points = 0;
+    public ControlPaddle paddle1;
+    public ControlPaddle paddle2;
 
-    // Fungsi untuk menambah poin Player 1
-    public void AddPointToPlayer1()
+    private void Update()
     {
-        player1Points++;
-        UpdateScore();
+        // Debug.Log untuk menampilkan health terkini dari setiap paddle
+        if (paddle1 != null && paddle2 != null)
+        {
+            Debug.Log($"Health Paddle 1: {paddle1.health} | Health Paddle 2: {paddle2.health}");
+        }
+
+        CheckGameStatus();
     }
 
-    // Fungsi untuk menambah poin Player 2
-    public void AddPointToPlayer2()
+    public void CheckGameStatus()
     {
-        player2Points++;
-        UpdateScore();
-    }
+        if (paddle1 != null && paddle2 != null)
+        {
+            if (paddle1.health <= 0 || paddle2.health <= 0)
+            {
+                Debug.Log("Permainan selesai!");
 
-    // Fungsi untuk memperbarui skor (bisa dihubungkan ke UI di tempat lain jika diperlukan)
-    private void UpdateScore()
-    {
-        Debug.Log($"Player 1: {player1Points} - Player 2: {player2Points}");
-        // Anda bisa menghubungkan pembaruan skor ke UI di tempat lain atau hanya menampilkan di console
+                // Kondisi untuk menentukan siapa yang menang atau tindakan lain
+                if (paddle1.health <= 0)
+                {
+                    Debug.Log("Paddle 2 menang!");
+                }
+                else if (paddle2.health <= 0)
+                {
+                    Debug.Log("Paddle 1 menang!");
+                }
+
+                // Jika host, berhenti jika salah satu paddle health-nya 0
+                if (IsHost)
+                {
+                    NetworkManager.Singleton.Shutdown();
+                }
+            }
+        }
     }
 }

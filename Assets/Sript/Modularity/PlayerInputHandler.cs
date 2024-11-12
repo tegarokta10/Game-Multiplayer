@@ -10,8 +10,6 @@ public class PlayerInputHandler : NetworkBehaviour
     {
         playerConfig = config;
         mover = GetComponent<Mover>();
-
-        GetComponent<Renderer>().material = playerConfig.PlayerMaterial;
     }
 
     private void Update()

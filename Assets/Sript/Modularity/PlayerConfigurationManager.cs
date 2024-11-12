@@ -30,3 +30,9 @@ public class PlayerConfigurationManager : MonoBehaviour
         return playerConfigs[index];
     }
 }
+
+public class PlayerConfiguration
+{
+    public int PlayerIndex { get; set; }
+    public bool IsReady { get; set; }
+}
