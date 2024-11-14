@@ -6,12 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene1.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Scenes/LobbyIP.unity
+    guid: fd30dd9de4a299241ae6863767c2e510
   - enabled: 1
-    path: Assets/Scenes/Non Modular.unity
-    guid: 20619ecac483b3546b2438d7fd88516b
-  - enabled: 1
-    path: D:/Kuliah/File git dari Yt/GamePONGNet-main/GamePONGNet-main/Assets/Scenes/SampleScene1.unity
-    guid: 00000000000000000000000000000000
+    path: Assets/Scenes/InGame.unity
+    guid: a3be2a085e22cf640b2bc9e522a17daf
   m_configObjects: {}

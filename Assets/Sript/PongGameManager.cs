@@ -5,42 +5,42 @@ public class PongGameManager : NetworkBehaviour
 {
     public ControlPaddle paddle1;
     public ControlPaddle paddle2;
+    public NetworkVariable<bool> gameWon = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     private void Update()
     {
-        // Debug.Log untuk menampilkan health terkini dari setiap paddle
+        // Debugging untuk health paddle
         if (paddle1 != null && paddle2 != null)
         {
-            Debug.Log($"Health Paddle 1: {paddle1.health} | Health Paddle 2: {paddle2.health}");
+            Debug.Log($"P1 Health: {paddle1.health} | P2 Health: {paddle2.health}");
         }
 
         CheckGameStatus();
     }
 
-    public void CheckGameStatus()
+    private void CheckGameStatus()
     {
-        if (paddle1 != null && paddle2 != null)
+        if (!IsServer || gameWon.Value || paddle1 == null || paddle2 == null) return;
+
+        // Kondisi kemenangan
+        if (paddle1.health.Value <= 0)
         {
-            if (paddle1.health <= 0 || paddle2.health <= 0)
-            {
-                Debug.Log("Permainan selesai!");
-
-                // Kondisi untuk menentukan siapa yang menang atau tindakan lain
-                if (paddle1.health <= 0)
-                {
-                    Debug.Log("Paddle 2 menang!");
-                }
-                else if (paddle2.health <= 0)
-                {
-                    Debug.Log("Paddle 1 menang!");
-                }
-
-                // Jika host, berhenti jika salah satu paddle health-nya 0
-                if (IsHost)
-                {
-                    NetworkManager.Singleton.Shutdown();
-                }
-            }
+            gameWon.Value = true;
+            ShowWinNotificationClientRpc("Paddle 2 Menang!");
+            SoundManager.Instance.StopMusic();
         }
+        else if (paddle2.health.Value <= 0)
+        {
+            gameWon.Value = true;
+            ShowWinNotificationClientRpc("Paddle 1 Menang!");
+            SoundManager.Instance.StopMusic();
+        }
+    }
+
+    [ClientRpc]
+    private void ShowWinNotificationClientRpc(string message)
+    {
+        FindObjectOfType<UIGame>().DisplayWinNotification(message);
+        FindObjectOfType<UIGame>().ShowRestartButton();
     }
 }
