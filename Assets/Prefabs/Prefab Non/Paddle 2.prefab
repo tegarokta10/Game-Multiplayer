@@ -188,7 +188,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -238,7 +238,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1831839440
+  GlobalObjectIdHash: 1868299054
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -262,13 +262,16 @@ MonoBehaviour:
   paddle: {fileID: 634082520884643743}
   moveSpeed: 5
   paddleYLimit: 3.62
+  health: 3
+  maxHealth: 5
   ballPrefab: {fileID: 3596670906077812380, guid: a6543bad095b1554090d79c34f5ab4d9, type: 3}
   spawnPoint: {fileID: 634082519502478486}
   moveUpKey: 119
   moveDownKey: 115
+  moveRightKey: 100
+  moveLeftKey: 97
   shootKey: 32
   shootDirection: -1
-  health: 3
 --- !u!114 &1811419407993816788
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -77,7 +77,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 0.88667035, g: 0.8962264, b: 0.080322154, a: 1}
   m_FlipX: 0
@@ -171,6 +171,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballPlayer1Prefab: {fileID: 2640614383967945022, guid: 51fc2f3bd35f55a45974e019579642ef, type: 3}
   ballPlayer2Prefab: {fileID: 3596670906077812380}
+  damage: 1
 --- !u!114 &3358565851027862239
 MonoBehaviour:
   m_ObjectHideFlags: 0

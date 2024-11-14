@@ -190,7 +190,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.netcode.gameobjects": {
-      "version": "file:D:\\Kuliah\\File git dari Yt\\com.unity.netcode.gameobjects-develop\\com.unity.netcode.gameobjects-develop\\com.unity.netcode.gameobjects",
+      "version": "file:D:/Kuliah/File git dari Yt/com.unity.netcode.gameobjects-develop/com.unity.netcode.gameobjects-develop/com.unity.netcode.gameobjects",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -291,6 +291,12 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
+    },
+    "com.veriorpies.parrelsync": {
+      "version": "file:ParrelSync-master/ParrelSync-master/ParrelSync",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

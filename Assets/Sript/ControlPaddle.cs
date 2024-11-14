@@ -6,16 +6,28 @@ public class ControlPaddle : NetworkBehaviour
     public Transform paddle;
     public float moveSpeed = 5f;
     public float paddleYLimit = 3.62f;
-    public int health = 5; // Health paddle
+    public NetworkVariable<int> health = new NetworkVariable<int>(5, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public int maxHealth = 5;
 
     public GameObject ballPrefab;
     public Transform spawnPoint;
     public KeyCode moveUpKey = KeyCode.W;
     public KeyCode moveDownKey = KeyCode.S;
+    public KeyCode moveRightKey = KeyCode.D;
+    public KeyCode moveLeftKey = KeyCode.A;
     public KeyCode shootKey = KeyCode.Space;
+    public float shootDirection = 1f;
 
-    public float shootDirection = 1f; // 1 untuk kanan (positif X), -1 untuk kiri (negatif X)
+    private float initialXPosition;
+
+    void Start()
+    {
+        initialXPosition = paddle.position.x;
+        if (IsServer)
+        {
+            health.Value = maxHealth;
+        }
+    }
 
     void Update()
     {
@@ -25,63 +37,79 @@ public class ControlPaddle : NetworkBehaviour
 
         if (Input.GetKeyDown(shootKey))
         {
-            ShootBallServerRpc();
+            ShootBall();
+
+            // Panggil efek suara tembakan dari InGameSound
+            InGameSound.Instance.PlayShootSFX();
         }
     }
 
     private void HandleMovement()
     {
-        // Menggerakkan paddle ke atas atau ke bawah sesuai input
-        float moveDirection = 0f;
-        if (Input.GetKey(moveUpKey))
-        {
-            moveDirection = 1f;
-        }
-        else if (Input.GetKey(moveDownKey))
-        {
-            moveDirection = -1f;
-        }
-        
-        paddle.Translate(Vector2.up * moveDirection * moveSpeed * Time.deltaTime);
-        
-        // Membatasi posisi paddle agar tidak keluar dari batas Y yang ditentukan
+        Vector2 moveDirection = new Vector2(
+            (Input.GetKey(moveRightKey) ? 1 : 0) - (Input.GetKey(moveLeftKey) ? 1 : 0),
+            (Input.GetKey(moveUpKey) ? 1 : 0) - (Input.GetKey(moveDownKey) ? 1 : 0)
+        ).normalized;
+
+        paddle.Translate(moveDirection * moveSpeed * Time.deltaTime);
+
         paddle.position = new Vector2(
-            paddle.position.x,
+            Mathf.Clamp(paddle.position.x, initialXPosition - 2f, initialXPosition + 2f),
             Mathf.Clamp(paddle.position.y, -paddleYLimit, paddleYLimit)
         );
     }
 
-    [ServerRpc]
-    private void ShootBallServerRpc()
+    private void ShootBall()
     {
-        Vector3 spawnPosition = spawnPoint.position;
-        GameObject ball = Instantiate(ballPrefab, spawnPosition, Quaternion.identity);
-        Rigidbody2D rb = ball.GetComponent<Rigidbody2D>();
-
-        if (rb != null)
+        if (IsOwner)
         {
-            rb.velocity = new Vector2(shootDirection * 5f, 0); // Tembakkan bola hanya dalam arah horizontal
+            SpawnBallServerRpc(spawnPoint.position, shootDirection);
+        }
+    }
+
+    [ServerRpc]
+    private void SpawnBallServerRpc(Vector3 position, float direction)
+    {
+        GameObject ball = Instantiate(ballPrefab, position, Quaternion.identity);
+        var networkObject = ball.GetComponent<NetworkObject>();
+
+        if (networkObject != null)
+        {
+            networkObject.Spawn();
         }
 
-        ball.GetComponent<NetworkObject>().Spawn();
+        var rb = ball.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = new Vector2(direction * 5f, 0);
+        }
     }
-    
+
     public void TakeDamage(int damage)
     {
-        health -= damage;
-        Debug.Log($"{gameObject.name} terkena damage. Sisa Health: {health}");
-
-        // Hancurkan paddle jika health habis dan hentikan permainan jika paddle milik host
-        if (health <= 0)
+        if (IsServer)
         {
-            Debug.Log($"{gameObject.name} telah dihancurkan!");
-            Destroy(gameObject);
+            health.Value -= damage;
 
-            if (IsHost)
+            if (health.Value <= 0)
             {
-                Debug.Log("Permainan berakhir! Server host berhenti.");
-                NetworkManager.Singleton.Shutdown();
+                FindObjectOfType<UIGame>().ShowRestartButton();
+                DestroyPaddleClientRpc();
             }
+        }
+    }
+
+    [ClientRpc]
+    private void DestroyPaddleClientRpc()
+    {
+        Destroy(gameObject);
+    }
+
+   public void ResetHealth()
+    {
+        if (IsServer)
+        {
+            health.Value = maxHealth;
         }
     }
 }

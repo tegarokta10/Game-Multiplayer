@@ -9,11 +9,12 @@ TagManager:
   - Paddle2
   - BallPlayer2
   - Paddle1
+  - Bintang
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - WAR
   - Water
   - UI
   - 

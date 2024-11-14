@@ -1,70 +1,99 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
+using Unity.Netcode;
+using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class UIGame : MonoBehaviour
 {
-    public PongGameManager gameManager; // Referensi ke PongGameManager
+    public PongGameManager gameManager;
 
-    // UI untuk Health Paddle 1 dan Paddle 2
-    public TMP_Text healthP1Text;
-    public TMP_Text healthP2Text;
+    [SerializeField] private ControlPaddle paddle1;
+    [SerializeField] private ControlPaddle paddle2;
 
-    // Notifikasi Kemenangan
-    public TMP_Text winNotificationText; // Text untuk notifikasi kemenangan
+    [SerializeField] private TMP_Text healthP1Text;
+    [SerializeField] private TMP_Text healthP2Text;
+    [SerializeField] private TMP_Text winNotificationText;
+    [SerializeField] private Button restartButton;
 
     private void Start()
     {
-        // Sembunyikan teks notifikasi kemenangan di awal
+        if (gameManager == null)
+        {
+            gameManager = FindObjectOfType<PongGameManager>();
+        }
+
+        if (paddle1 != null)
+        {
+            paddle1.health.OnValueChanged += (oldHealth, newHealth) => UpdateHealthUI();
+        }
+
+        if (paddle2 != null)
+        {
+            paddle2.health.OnValueChanged += (oldHealth, newHealth) => UpdateHealthUI();
+        }
+
         if (winNotificationText != null)
         {
             winNotificationText.gameObject.SetActive(false);
         }
-    }
 
-    private void Update()
-    {
-        UpdateHealthUI();
-        CheckWinCondition();
+        if (restartButton != null)
+        {
+            restartButton.gameObject.SetActive(false);
+            restartButton.onClick.AddListener(OnRestartButtonClicked);
+        }
     }
 
     private void UpdateHealthUI()
     {
-        if (gameManager != null)
+        if (paddle1 != null)
         {
-            // Periksa apakah paddle1 dan paddle2 tidak null, lalu perbarui teks health
-            if (gameManager.paddle1 != null && healthP1Text != null)
-            {
-                healthP1Text.text = $"Health Paddle 1: {gameManager.paddle1.health}";
-            }
+            healthP1Text.text = $"HP P1: {paddle1.health.Value}";
+        }
 
-            if (gameManager.paddle2 != null && healthP2Text != null)
-            {
-                healthP2Text.text = $"Health Paddle 2: {gameManager.paddle2.health}";
-            }
+        if (paddle2 != null)
+        {
+            healthP2Text.text = $"HP P2: {paddle2.health.Value}";
         }
     }
 
-    private void CheckWinCondition()
-    {
-        if (gameManager != null)
-        {
-            if (gameManager.paddle1 != null && gameManager.paddle1.health <= 0)
-            {
-                DisplayWinNotification("Paddle 2 Menang!");
-            }
-            else if (gameManager.paddle2 != null && gameManager.paddle2.health <= 0)
-            {
-                DisplayWinNotification("Paddle 1 Menang!");
-            }
-        }
-    }
-
-    private void DisplayWinNotification(string message)
+    public void DisplayWinNotification(string message)
     {
         if (winNotificationText != null)
         {
             winNotificationText.text = message;
-            winNotificationText.gameObject.SetActive(true); // Menampilkan teks notifikasi kemenangan
+            winNotificationText.gameObject.SetActive(true);
         }
+    }
+
+    public void ShowRestartButton()
+    {
+        if (restartButton != null && !restartButton.gameObject.activeInHierarchy)
+        {
+            restartButton.gameObject.SetActive(true);
+        }
+    }
+
+    private void OnRestartButtonClicked()
+    {
+        winNotificationText.gameObject.SetActive(false);
+        restartButton.gameObject.SetActive(false);
+
+        if (NetworkManager.Singleton.IsServer)
+        {
+            StartCoroutine(RestartGame());
+        }
+    }
+
+    private IEnumerator RestartGame()
+    {
+        if (paddle1 != null) paddle1.ResetHealth();
+        if (paddle2 != null) paddle2.ResetHealth();
+
+        yield return new WaitForSeconds(1);
+
+        NetworkManager.Singleton.SceneManager.LoadScene("InGame", LoadSceneMode.Single);
     }
 }
